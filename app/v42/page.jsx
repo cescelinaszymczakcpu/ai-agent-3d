@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './v42.css';
+import './true3d.css';
 import {LivingOrb,presets,voicePresets,hairStyles,eyeStyles,mustacheStyles} from './LivingOrb3D';
 
 const states=['idle','listening','thinking','speaking','success','warning','error'];
@@ -12,10 +13,8 @@ export default function LivingOrbCreator(){
   const [audioLevel,setAudioLevel]=useState(.18);
   const [micOn,setMicOn]=useState(false);
   const raf=useRef(null); const streamRef=useRef(null); const ctxRef=useRef(null);
-
   const set=(key,value)=>setConfig(c=>({...c,[key]:value}));
   const selectedPreset=useMemo(()=>Object.entries(presets).find(([,p])=>p.name===config.name)?.[0]||'', [config.name]);
-
   async function toggleMic(){
     if(micOn){ stopMic(); return; }
     try{
@@ -29,20 +28,15 @@ export default function LivingOrbCreator(){
   }
   function stopMic(){ if(raf.current)cancelAnimationFrame(raf.current); streamRef.current?.getTracks().forEach(t=>t.stop()); ctxRef.current?.close(); setMicOn(false); setAudioLevel(.18); setState('idle'); }
   useEffect(()=>()=>stopMic(),[]);
-
   function testVoice(){
     setState('speaking'); let t=0; const id=setInterval(()=>{t+=.12; setAudioLevel(.22+Math.abs(Math.sin(t*2.4))*.62*Math.abs(Math.sin(t*.73)));},70);
     if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance('Cześć. Jestem Twoim Living Orb. Tak wygląda moja reakcja na głos.'); u.lang='pl-PL'; u.rate=.95; u.onend=()=>{clearInterval(id);setState('idle');setAudioLevel(.18)}; speechSynthesis.cancel(); speechSynthesis.speak(u); setTimeout(()=>{if(!speechSynthesis.speaking){clearInterval(id);setState('idle');setAudioLevel(.18)}},7000); }
     else setTimeout(()=>{clearInterval(id);setState('idle');setAudioLevel(.18)},4500);
   }
-
   return <main className="v42">
     <div className="v42Head"><div><div className="eyebrow">ALTER · LIVING ORB 4.2 · TRUE 3D</div><h1>Living Orb Creator</h1><p>Renderer WebGL: szkło, refrakcja, objętościowe kończyny, mikro-ruch i Voice Orb wewnątrz kuli.</p></div><button className="miniButton" onClick={()=>location.href='/'}>← Aplikacja</button></div>
     <div className="creatorGrid">
-      <section className="orbStage">
-        <LivingOrb config={config} state={state} audioLevel={audioLevel}/>
-        <div className="stateBar">{states.map(s=><button key={s} className={state===s?'active':''} onClick={()=>setState(s)}>{s.toUpperCase()}</button>)}<button onClick={testVoice}>TEST VOICE</button><button className={micOn?'active':''} onClick={toggleMic}>{micOn?'MIC ON':'MIC REACTIVE'}</button></div>
-      </section>
+      <section className="orbStage"><LivingOrb config={config} state={state} audioLevel={audioLevel}/><div className="stateBar">{states.map(s=><button key={s} className={state===s?'active':''} onClick={()=>setState(s)}>{s.toUpperCase()}</button>)}<button onClick={testVoice}>TEST VOICE</button><button className={micOn?'active':''} onClick={toggleMic}>{micOn?'MIC ON':'MIC REACTIVE'}</button></div></section>
       <aside className="editorPanel">
         <Section title="Presety"><div className="presetButtons">{Object.entries(presets).map(([id,p])=><button key={id} className={selectedPreset===id?'active':''} onClick={()=>setConfig({...p})}>{p.name}</button>)}</div></Section>
         <Section title="Character"><div className="seg">{['female','male','neutral'].map(g=><button key={g} className={config.gender===g?'active':''} onClick={()=>set('gender',g)}>{g}</button>)}</div><Slider label="Grubość kończyn" value={config.limbWidth} min={0.45} max={1.25} step={0.05} onChange={v=>set('limbWidth',v)}/><Slider label="Długość rąk" value={config.armLength} min={0.75} max={1.25} step={0.05} onChange={v=>set('armLength',v)}/><Slider label="Długość nóg" value={config.legLength} min={0.8} max={1.3} step={0.05} onChange={v=>set('legLength',v)}/></Section>
@@ -55,7 +49,6 @@ export default function LivingOrbCreator(){
     </div>
   </main>
 }
-
 function Section({title,children}){return <section className="section"><h3>{title}</h3>{children}</section>}
 function Slider({label,value,min,max,step,onChange}){return <div className="control"><label>{label}</label><input type="range" value={value} min={min} max={max} step={step} onChange={e=>onChange(Number(e.target.value))}/></div>}
 function Color({label,value,onChange}){return <div className="control"><label>{label}</label><input type="color" value={value} onChange={e=>onChange(e.target.value)}/></div>}
