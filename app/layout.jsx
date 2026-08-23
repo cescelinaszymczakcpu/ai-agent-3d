@@ -1,4 +1,6 @@
 import './globals.css';
+import './limbs.css';
+import LimbInjector from './LimbInjector';
 
 export const metadata = {
   title: 'ALTER — Second Life',
@@ -8,7 +10,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pl">
-      <body>{children}</body>
+      <body>
+        {children}
+        <LimbInjector />
+      </body>
     </html>
   );
 }
