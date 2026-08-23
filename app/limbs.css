@@ -1,17 +1,23 @@
 .premiumEcho.alter-limbs-ready{overflow:visible}
-.alter-limb{position:absolute;display:block;pointer-events:none;z-index:-1;border:1px solid rgba(255,255,255,.3);background:linear-gradient(145deg,color-mix(in srgb,var(--c3) 42%,transparent),color-mix(in srgb,var(--c2) 62%,transparent) 42%,color-mix(in srgb,var(--c1) 72%,transparent));box-shadow:inset 5px 7px 12px rgba(255,255,255,.18),inset -7px -8px 14px rgba(0,0,0,.16),0 0 18px color-mix(in srgb,var(--c2) 24%,transparent);backdrop-filter:blur(10px) saturate(135%);-webkit-backdrop-filter:blur(10px) saturate(135%)}
-.arm-left,.arm-right{width:23%;height:58%;top:38%;border-radius:999px 999px 70% 70%;transform-origin:50% 8%}
-.arm-left{left:-15%;transform:rotate(27deg);animation:alterArmLeft 3.4s ease-in-out infinite}
-.arm-right{right:-15%;transform:rotate(-27deg);animation:alterArmRight 3.4s ease-in-out infinite .16s}
-.leg-left,.leg-right{width:22%;height:50%;top:82%;border-radius:65% 65% 999px 999px;transform-origin:50% 10%}
-.leg-left{left:25%;transform:rotate(9deg);animation:alterLegLeft 2.9s ease-in-out infinite}
-.leg-right{right:25%;transform:rotate(-9deg);animation:alterLegRight 2.9s ease-in-out infinite .14s}
-.largeEcho .alter-limb{border-width:1.5px;box-shadow:inset 10px 13px 24px rgba(255,255,255,.2),inset -12px -15px 24px rgba(0,0,0,.18),0 0 34px color-mix(in srgb,var(--c2) 28%,transparent)}
-.largeEcho .arm-left,.largeEcho .arm-right{width:21%;height:55%;top:39%}
-.largeEcho .arm-left{left:-13%}.largeEcho .arm-right{right:-13%}
-.largeEcho .leg-left,.largeEcho .leg-right{width:20%;height:47%;top:84%}
-@keyframes alterArmLeft{0%,100%{transform:rotate(27deg) translateY(0)}38%{transform:rotate(18deg) translateY(-4%)}68%{transform:rotate(33deg) translateY(2%)}}
-@keyframes alterArmRight{0%,100%{transform:rotate(-27deg) translateY(0)}42%{transform:rotate(-16deg) translateY(-5%)}72%{transform:rotate(-34deg) translateY(2%)}}
-@keyframes alterLegLeft{0%,100%{transform:rotate(9deg) translateY(0)}50%{transform:rotate(4deg) translateY(6%)}}
-@keyframes alterLegRight{0%,100%{transform:rotate(-9deg) translateY(0)}50%{transform:rotate(-4deg) translateY(4%)}}
-@media(max-width:620px){.arm-left{left:-12%}.arm-right{right:-12%}.leg-left{left:27%}.leg-right{right:27%}}
+.alter-limb{position:absolute;display:block;pointer-events:none;z-index:-1;border:1px solid rgba(255,255,255,.28);background:linear-gradient(145deg,color-mix(in srgb,var(--c3) 40%,transparent),color-mix(in srgb,var(--c2) 58%,transparent) 42%,color-mix(in srgb,var(--c1) 68%,transparent));box-shadow:inset 3px 5px 9px rgba(255,255,255,.16),inset -5px -6px 10px rgba(0,0,0,.13),0 0 14px color-mix(in srgb,var(--c2) 22%,transparent);backdrop-filter:blur(10px) saturate(135%);-webkit-backdrop-filter:blur(10px) saturate(135%)}
+.arm-left,.arm-right{width:11%;height:58%;top:40%;border-radius:999px;transform-origin:50% 8%}
+.arm-left{left:-8%;transform:rotate(24deg);animation:alterArmLeft 3.4s ease-in-out infinite}
+.arm-right{right:-8%;transform:rotate(-24deg);animation:alterArmRight 3.4s ease-in-out infinite .16s}
+.leg-left,.leg-right{width:10%;height:54%;top:84%;border-radius:999px;transform-origin:50% 10%}
+.leg-left{left:34%;transform:rotate(6deg);animation:alterLegLeft 2.9s ease-in-out infinite}
+.leg-right{right:34%;transform:rotate(-6deg);animation:alterLegRight 2.9s ease-in-out infinite .14s}
+.largeEcho .arm-left,.largeEcho .arm-right{width:8%;height:57%;top:40%}.largeEcho .arm-left{left:-6%}.largeEcho .arm-right{right:-6%}
+.largeEcho .leg-left,.largeEcho .leg-right{width:7%;height:55%;top:86%}.largeEcho .leg-left{left:38%}.largeEcho .leg-right{right:38%}
+.alter-face{position:absolute;inset:0;z-index:12;pointer-events:none}
+.eye{position:absolute;top:34%;width:16%;height:20%;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 42% 38%,#fff 0 10%,#17112f 11% 31%,#5b4fb9 32% 43%,rgba(255,255,255,.92) 44% 52%,rgba(255,255,255,.18) 53% 100%);box-shadow:0 0 12px rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.42)}
+.eye-left{left:26%}.eye-right{right:26%}
+.male-moustache{position:absolute;left:50%;top:51%;width:72%;height:17%;transform:translateX(-50%);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--c2) 40%,transparent));background:linear-gradient(90deg,var(--c2),var(--c1),var(--c3),var(--c1),var(--c2));clip-path:path('M 0 42 C 16 0 34 5 50 34 C 66 5 84 0 100 42 C 83 39 70 55 50 47 C 30 55 17 39 0 42 Z');opacity:.96}
+.male-moustache:before,.male-moustache:after{content:"";position:absolute;top:-3%;width:42%;height:105%;border:3px solid color-mix(in srgb,var(--c2) 75%,white);border-top-color:transparent;border-left-color:transparent;border-radius:50%;opacity:.85}.male-moustache:before{left:-25%;transform:rotate(18deg)}.male-moustache:after{right:-25%;transform:scaleX(-1) rotate(18deg)}
+.female-curl{display:none;position:absolute;left:58%;top:-14%;width:40%;height:42%;border:5px solid color-mix(in srgb,var(--c1) 65%,white);border-left-color:transparent;border-bottom-color:transparent;border-radius:50%;transform:rotate(-18deg);filter:drop-shadow(0 0 12px color-mix(in srgb,var(--c2) 45%,transparent))}
+.alter-female .male-moustache{display:none}.alter-female .female-curl{display:block}.alter-female .eye{height:22%;box-shadow:0 0 12px rgba(255,255,255,.32),0 -5px 0 -3px color-mix(in srgb,var(--c1) 70%,white)}
+.alter-gender-picker{padding-top:4px;margin-bottom:18px}
+@keyframes alterArmLeft{0%,100%{transform:rotate(24deg) translateY(0)}38%{transform:rotate(16deg) translateY(-4%)}68%{transform:rotate(29deg) translateY(2%)}}
+@keyframes alterArmRight{0%,100%{transform:rotate(-24deg) translateY(0)}42%{transform:rotate(-15deg) translateY(-5%)}72%{transform:rotate(-30deg) translateY(2%)}}
+@keyframes alterLegLeft{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(3deg) translateY(4%)}}
+@keyframes alterLegRight{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-3deg) translateY(4%)}}
+@media(max-width:620px){.arm-left{left:-6%}.arm-right{right:-6%}.leg-left{left:36%}.leg-right{right:36%}}
