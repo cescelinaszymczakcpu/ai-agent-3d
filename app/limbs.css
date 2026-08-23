@@ -1,23 +1,17 @@
-.premiumEcho.alter-limbs-ready{overflow:visible}
-.alter-limb{position:absolute;display:block;pointer-events:none;z-index:-1;border:1px solid rgba(255,255,255,.28);background:linear-gradient(145deg,color-mix(in srgb,var(--c3) 40%,transparent),color-mix(in srgb,var(--c2) 58%,transparent) 42%,color-mix(in srgb,var(--c1) 68%,transparent));box-shadow:inset 3px 5px 9px rgba(255,255,255,.16),inset -5px -6px 10px rgba(0,0,0,.13),0 0 14px color-mix(in srgb,var(--c2) 22%,transparent);backdrop-filter:blur(10px) saturate(135%);-webkit-backdrop-filter:blur(10px) saturate(135%)}
-.arm-left,.arm-right{width:11%;height:58%;top:40%;border-radius:999px;transform-origin:50% 8%}
-.arm-left{left:-8%;transform:rotate(24deg);animation:alterArmLeft 3.4s ease-in-out infinite}
-.arm-right{right:-8%;transform:rotate(-24deg);animation:alterArmRight 3.4s ease-in-out infinite .16s}
-.leg-left,.leg-right{width:10%;height:54%;top:84%;border-radius:999px;transform-origin:50% 10%}
-.leg-left{left:34%;transform:rotate(6deg);animation:alterLegLeft 2.9s ease-in-out infinite}
-.leg-right{right:34%;transform:rotate(-6deg);animation:alterLegRight 2.9s ease-in-out infinite .14s}
-.largeEcho .arm-left,.largeEcho .arm-right{width:8%;height:57%;top:40%}.largeEcho .arm-left{left:-6%}.largeEcho .arm-right{right:-6%}
-.largeEcho .leg-left,.largeEcho .leg-right{width:7%;height:55%;top:86%}.largeEcho .leg-left{left:38%}.largeEcho .leg-right{right:38%}
-.alter-face{position:absolute;inset:0;z-index:12;pointer-events:none}
-.eye{position:absolute;top:34%;width:16%;height:20%;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 42% 38%,#fff 0 10%,#17112f 11% 31%,#5b4fb9 32% 43%,rgba(255,255,255,.92) 44% 52%,rgba(255,255,255,.18) 53% 100%);box-shadow:0 0 12px rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.42)}
-.eye-left{left:26%}.eye-right{right:26%}
-.male-moustache{position:absolute;left:50%;top:51%;width:72%;height:17%;transform:translateX(-50%);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--c2) 40%,transparent));background:linear-gradient(90deg,var(--c2),var(--c1),var(--c3),var(--c1),var(--c2));clip-path:path('M 0 42 C 16 0 34 5 50 34 C 66 5 84 0 100 42 C 83 39 70 55 50 47 C 30 55 17 39 0 42 Z');opacity:.96}
-.male-moustache:before,.male-moustache:after{content:"";position:absolute;top:-3%;width:42%;height:105%;border:3px solid color-mix(in srgb,var(--c2) 75%,white);border-top-color:transparent;border-left-color:transparent;border-radius:50%;opacity:.85}.male-moustache:before{left:-25%;transform:rotate(18deg)}.male-moustache:after{right:-25%;transform:scaleX(-1) rotate(18deg)}
-.female-curl{display:none;position:absolute;left:58%;top:-14%;width:40%;height:42%;border:5px solid color-mix(in srgb,var(--c1) 65%,white);border-left-color:transparent;border-bottom-color:transparent;border-radius:50%;transform:rotate(-18deg);filter:drop-shadow(0 0 12px color-mix(in srgb,var(--c2) 45%,transparent))}
-.alter-female .male-moustache{display:none}.alter-female .female-curl{display:block}.alter-female .eye{height:22%;box-shadow:0 0 12px rgba(255,255,255,.32),0 -5px 0 -3px color-mix(in srgb,var(--c1) 70%,white)}
+.premiumEcho.alter-limbs-ready{overflow:visible!important;isolation:isolate;background:radial-gradient(circle at 32% 18%,rgba(255,255,255,.96),transparent 12%),radial-gradient(circle at 74% 28%,color-mix(in srgb,var(--c3) 76%,transparent),transparent 28%),radial-gradient(circle at 35% 72%,color-mix(in srgb,var(--c1) 55%,transparent),transparent 38%),conic-gradient(from 210deg,var(--c1),var(--c2),var(--c3),var(--c1));border:1px solid rgba(255,255,255,.5);box-shadow:inset -24px -28px 38px rgba(0,0,0,.22),inset 18px 20px 34px rgba(255,255,255,.18),0 0 55px color-mix(in srgb,var(--c1) 28%,transparent),0 0 92px color-mix(in srgb,var(--c2) 18%,transparent)}
+.premiumEcho.alter-limbs-ready>.core,.premiumEcho.alter-limbs-ready>.headpiece,.premiumEcho.alter-limbs-ready>.orbit{display:none!important}
+.premiumEcho.alter-limbs-ready>.liquidLayer{opacity:.36}.premiumEcho.alter-limbs-ready>.shine{opacity:.9}
+.alter-limb{position:absolute;display:block;pointer-events:none;z-index:-1;width:4.4%;border-radius:999px;border:1px solid rgba(255,255,255,.42);background:linear-gradient(90deg,rgba(255,255,255,.5),color-mix(in srgb,var(--c2) 50%,transparent) 36%,color-mix(in srgb,var(--c1) 62%,transparent) 70%,rgba(255,255,255,.34));box-shadow:inset 2px 4px 7px rgba(255,255,255,.28),inset -3px -4px 8px rgba(0,0,0,.14),0 0 12px color-mix(in srgb,var(--c2) 22%,transparent);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%)}
+.arm-left,.arm-right{height:62%;top:42%;transform-origin:50% 5%}.arm-left{left:-2.5%;transform:rotate(31deg);animation:alterArmLeft 4.4s ease-in-out infinite}.arm-right{right:-2.5%;transform:rotate(-31deg);animation:alterArmRight 4.4s ease-in-out infinite .18s}
+.leg-left,.leg-right{width:4%;height:68%;top:88%;transform-origin:50% 6%}.leg-left{left:39%;transform:rotate(4deg);animation:alterLegLeft 3.6s ease-in-out infinite}.leg-right{right:39%;transform:rotate(-4deg);animation:alterLegRight 3.6s ease-in-out infinite .16s}
+.alter-limb:after{content:"";position:absolute;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,rgba(255,255,255,.66),color-mix(in srgb,var(--c2) 56%,transparent),color-mix(in srgb,var(--c1) 68%,transparent));border:1px solid rgba(255,255,255,.35);box-shadow:0 0 10px color-mix(in srgb,var(--c2) 22%,transparent)}
+.arm-left:after,.arm-right:after{width:220%;height:13%;bottom:-7%;border-radius:60% 60% 48% 48%}
+.leg-left:after,.leg-right:after{width:310%;height:10%;bottom:-6%;border-radius:75% 75% 50% 50%}
+.largeEcho .alter-limb{width:3.7%}.largeEcho .arm-left,.largeEcho .arm-right{height:61%;top:43%}.largeEcho .arm-left{left:-1.5%}.largeEcho .arm-right{right:-1.5%}.largeEcho .leg-left,.largeEcho .leg-right{width:3.4%;height:66%;top:89%}.largeEcho .leg-left{left:40%}.largeEcho .leg-right{right:40%}
+.alter-face{position:absolute;inset:0;z-index:15;pointer-events:none;overflow:visible}.alter-face-svg{position:absolute;left:-10%;top:-10%;width:120%;height:120%;overflow:visible}.female-detail,.female-lashes{display:none}.alter-female .male-detail{display:none}.alter-female .female-detail,.alter-female .female-lashes{display:block}.alter-female .alter-mouth{stroke-width:3}
 .alter-gender-picker{padding-top:4px;margin-bottom:18px}
-@keyframes alterArmLeft{0%,100%{transform:rotate(24deg) translateY(0)}38%{transform:rotate(16deg) translateY(-4%)}68%{transform:rotate(29deg) translateY(2%)}}
-@keyframes alterArmRight{0%,100%{transform:rotate(-24deg) translateY(0)}42%{transform:rotate(-15deg) translateY(-5%)}72%{transform:rotate(-30deg) translateY(2%)}}
-@keyframes alterLegLeft{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(3deg) translateY(4%)}}
-@keyframes alterLegRight{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-3deg) translateY(4%)}}
-@media(max-width:620px){.arm-left{left:-6%}.arm-right{right:-6%}.leg-left{left:36%}.leg-right{right:36%}}
+@keyframes alterArmLeft{0%,100%{transform:rotate(31deg) translateY(0)}42%{transform:rotate(18deg) translateY(-5%)}68%{transform:rotate(35deg) translateY(2%)}}
+@keyframes alterArmRight{0%,100%{transform:rotate(-31deg) translateY(0)}44%{transform:rotate(-19deg) translateY(-5%)}72%{transform:rotate(-35deg) translateY(2%)}}
+@keyframes alterLegLeft{0%,100%{transform:rotate(4deg) translateY(0)}50%{transform:rotate(1deg) translateY(3%)}}
+@keyframes alterLegRight{0%,100%{transform:rotate(-4deg) translateY(0)}50%{transform:rotate(-1deg) translateY(3%)}}
+@media(max-width:620px){.arm-left{left:-1%}.arm-right{right:-1%}.leg-left{left:40%}.leg-right{right:40%}}
