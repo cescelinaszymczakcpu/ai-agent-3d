@@ -4,12 +4,6 @@ import React,{useMemo,useRef} from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 
-const GESTURE_NAMES=[
-  "rest","soft-open-hand","one-hand-explain","two-hand-explain",
-  "small-emphasis","medium-emphasis","gentle-offering","light-presenting",
-  "chest-level-open","small-inward-gesture","side-accent","subtle-wrist-turn"
-];
-
 const GESTURES={
   rest:{l:[0,0,0,0,0,0,.14],r:[0,0,0,0,0,0,.14]},
   "soft-open-hand":{l:[-.10,.06,-.12,.08,.02,.10,.66],r:[-.20,-.05,.18,-.12,-.03,-.10,.72]},
@@ -39,7 +33,7 @@ function CurveTube({points,radius=.038,color="#78E8FF",opacity=.78}){
 
 function HandRig({mirror=false,openRef,wristRef}){
   const fingers=useRef([]);const sign=mirror?-1:1;
-  useFrame((state,delta)=>{
+  useFrame((frame,delta)=>{
     const open=clamp01(openRef.current??.2);
     fingers.current.forEach((g,i)=>{if(!g)return;const spread=(i-1.5)*.055*open*sign;g.rotation.z=damp(g.rotation.z,spread,10,delta);g.rotation.x=damp(g.rotation.x,(1-open)*.18,10,delta);});
   });
@@ -104,8 +98,8 @@ export function ConversationalBody({state="idle",audioLevel=0,emotion="neutral",
     const power=speech?(.55+g.intensity*.45)*emo:(state==="thinking"?.24:state==="listening"?.12:.08);
     const phase=speech?Math.sin(Math.min(1,(t-g.startedAt)/Math.max(.4,g.duration))*Math.PI):0;
     const micro=state==="idle"||state==="listening"||state==="thinking"?Math.sin(t*.55)*.015:0;
-    const apply=(ref,arr,offset=0)=>{if(!ref.current)return;ref.current.rotation.x=damp(ref.current.rotation.x,arr[0]*power+micro*.3,6.5,delta);ref.current.rotation.y=damp(ref.current.rotation.y,arr[1]*power,6.5,delta);ref.current.rotation.z=damp(ref.current.rotation.z,arr[2]*power+offset*phase,6.5,delta);};
-    apply(lS.current?lS:null,preset.l,-.018);apply(rS.current?rS:null,preset.r,.018);
+    const apply=(ref,arr,offset=0)=>{if(!ref?.current)return;ref.current.rotation.x=damp(ref.current.rotation.x,arr[0]*power+micro*.3,6.5,delta);ref.current.rotation.y=damp(ref.current.rotation.y,arr[1]*power,6.5,delta);ref.current.rotation.z=damp(ref.current.rotation.z,arr[2]*power+offset*phase,6.5,delta);};
+    apply(lS,preset.l,-.018);apply(rS,preset.r,.018);
     if(lE.current){lE.current.rotation.x=damp(lE.current.rotation.x,preset.l[3]*power,7.5,delta);lE.current.rotation.z=damp(lE.current.rotation.z,preset.l[4]*power,7.5,delta);}
     if(rE.current){rE.current.rotation.x=damp(rE.current.rotation.x,preset.r[3]*power,7.5,delta);rE.current.rotation.z=damp(rE.current.rotation.z,preset.r[4]*power,7.5,delta);}
     if(lW.current){lW.current.rotation.z=damp(lW.current.rotation.z,preset.l[5]*power+Math.sin(t*1.3)*.018*power,9,delta);}
@@ -152,17 +146,17 @@ export function LipSyncMouth({state="idle",audioLevel=0,audioBands=null,emotion=
     if(state==="speaking"&&a<.025)target="rest";
     const speed=12;VISEME_KEYS.forEach(k=>{const desired=k===target?1:0;weights.current[k]=damp(weights.current[k],desired,speed,delta);});
     const shape={width:0,open:0,round:0,smile:0,jaw:0,closed:0};let total=0;VISEME_KEYS.forEach(k=>{const w=weights.current[k];total+=w;const s=VISEME_SHAPES[k];Object.keys(shape).forEach(p=>shape[p]+=s[p]*w);});total=Math.max(.001,total);Object.keys(shape).forEach(p=>shape[p]/=total);
-    const emo=emotion==="calm"?.84:emotion==="caring"?.90:emotion==="happy"?1.05:emotion==="excited"?1.10:.98;const open=shape.open*emo*(.78+a*.42);
-    if(mouth.current){mouth.current.scale.x=damp(mouth.current.scale.x,shape.width/.28,14,delta);mouth.current.rotation.z=damp(mouth.current.rotation.z,Math.sin(t*.9)*.006*(state==="speaking"?1:0),10,delta);}
-    if(upper.current){upper.current.position.y=damp(upper.current.position.y,.018+open*.50+shape.smile*.045,16,delta);upper.current.scale.y=damp(upper.current.scale.y,.72+shape.round*.55-shape.closed*.25,16,delta);upper.current.scale.x=damp(upper.current.scale.x,1-shape.round*.18+shape.smile*.12,16,delta);}
-    if(lower.current){lower.current.position.y=damp(lower.current.position.y,-.018-open*.58-shape.jaw*.08+shape.smile*.018,16,delta);lower.current.scale.y=damp(lower.current.scale.y,.76+shape.round*.42-shape.closed*.30,16,delta);lower.current.scale.x=damp(lower.current.scale.x,1-shape.round*.16+shape.smile*.10,16,delta);}
-    if(cavity.current){cavity.current.scale.x=damp(cavity.current.scale.x,.92-shape.round*.24,16,delta);cavity.current.scale.y=damp(cavity.current.scale.y,Math.max(.06,open*5.4),16,delta);cavity.current.visible=open>.012&&shape.closed<.72;}
+    const emo=emotion==="calm"?.84:emotion==="caring"?.90:emotion==="happy"?1.05:emotion==="excited"?1.10:.98;const open=shape.open*emo*(.78+a*.42);const widthFactor=shape.width/.28;
+    if(mouth.current)mouth.current.rotation.z=damp(mouth.current.rotation.z,Math.sin(t*.9)*.006*(state==="speaking"?1:0),10,delta);
+    if(upper.current){upper.current.position.y=damp(upper.current.position.y,.018+open*.50+shape.smile*.045,16,delta);upper.current.scale.x=damp(upper.current.scale.x,.285*widthFactor*(1-shape.round*.18+shape.smile*.12),16,delta);upper.current.scale.y=damp(upper.current.scale.y,.045*(.72+shape.round*.55-shape.closed*.25),16,delta);upper.current.scale.z=.055;}
+    if(lower.current){lower.current.position.y=damp(lower.current.position.y,-.018-open*.58-shape.jaw*.08+shape.smile*.018,16,delta);lower.current.scale.x=damp(lower.current.scale.x,.285*widthFactor*(1-shape.round*.16+shape.smile*.10),16,delta);lower.current.scale.y=damp(lower.current.scale.y,.050*(.76+shape.round*.42-shape.closed*.30),16,delta);lower.current.scale.z=.060;}
+    if(cavity.current){cavity.current.scale.x=damp(cavity.current.scale.x,.24*widthFactor*(.92-shape.round*.24),16,delta);cavity.current.scale.y=damp(cavity.current.scale.y,Math.max(.012,open*.30),16,delta);cavity.current.scale.z=.055;cavity.current.visible=open>.012&&shape.closed<.72;}
     if(teeth.current){teeth.current.visible=target==="fv"||target==="ee";teeth.current.position.y=damp(teeth.current.position.y,target==="fv"?-.008:.018,16,delta);}
   });
   return <group ref={mouth} position={[0,.91,1.50]}>
-    <mesh ref={cavity} position={[0,-.012,-.025]} scale={[.92,.08,.52]}><sphereGeometry args={[.24,28,20]}/><meshBasicMaterial color="#170A22" transparent opacity={.72}/></mesh>
-    <mesh ref={upper} position={[0,.018,.01]} scale={[1,.72,1]}><sphereGeometry args={[.285,.045,.055,32,16]}/><meshPhysicalMaterial color="#FF8FCA" emissive="#D84B9E" emissiveIntensity={.10} roughness={.11} clearcoat={1} transparent opacity={.88}/></mesh>
-    <mesh ref={lower} position={[0,-.018,.018]} scale={[1,.76,1]}><sphereGeometry args={[.285,.050,.060,32,16]}/><meshPhysicalMaterial color="#FF79C2" emissive="#C947A2" emissiveIntensity={.08} roughness={.11} clearcoat={1} transparent opacity={.88}/></mesh>
+    <mesh ref={cavity} position={[0,-.012,-.025]} scale={[.22,.012,.055]}><sphereGeometry args={[1,28,20]}/><meshBasicMaterial color="#170A22" transparent opacity={.72}/></mesh>
+    <mesh ref={upper} position={[0,.018,.01]} scale={[.285,.032,.055]}><sphereGeometry args={[1,32,16]}/><meshPhysicalMaterial color="#FF8FCA" emissive="#D84B9E" emissiveIntensity={.10} roughness={.11} clearcoat={1} transparent opacity={.88}/></mesh>
+    <mesh ref={lower} position={[0,-.018,.018]} scale={[.285,.038,.060]}><sphereGeometry args={[1,32,16]}/><meshPhysicalMaterial color="#FF79C2" emissive="#C947A2" emissiveIntensity={.08} roughness={.11} clearcoat={1} transparent opacity={.88}/></mesh>
     <mesh ref={teeth} position={[0,.014,.026]} scale={[.16,.018,.025]} visible={false}><boxGeometry args={[1,1,1]}/><meshPhysicalMaterial color="#FFFDF8" roughness={.18}/></mesh>
   </group>;
 }
@@ -170,5 +164,5 @@ export function LipSyncMouth({state="idle",audioLevel=0,audioBands=null,emotion=
 export function SpeakingHeadMotion({state="idle",audioLevel=0,emotion="neutral",children}){
   const ref=useRef();const last=useRef(0);
   useFrame((frame,delta)=>{if(!ref.current)return;const t=frame.clock.elapsedTime,a=clamp01(audioLevel),speech=state==="speaking";const accent=Math.max(0,a-last.current);last.current=a;const emo=emotion==="calm"?.55:emotion==="caring"?.68:emotion==="happy"?1.05:emotion==="curious"?1.08:.82;const rx=speech?(Math.sin(t*.78)*.006+accent*.018)*emo:0;const ry=speech?Math.sin(t*.43+.8)*.010*emo:0;const rz=speech?Math.sin(t*.57)*.007*emo:0;ref.current.rotation.x=damp(ref.current.rotation.x,rx,5,delta);ref.current.rotation.y=damp(ref.current.rotation.y,ry,5,delta);ref.current.rotation.z=damp(ref.current.rotation.z,rz,5,delta);});
-  return <group ref={ref}>{children}</group>;
+  return <group ref={ref} position={[0,1.25,0]}><group position={[0,-1.25,0]}>{children}</group></group>;
 }
