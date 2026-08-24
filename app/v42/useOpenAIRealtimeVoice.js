@@ -132,7 +132,9 @@ export default function useOpenAIRealtimeVoice(variant = "female") {
   }, [setPhaseSafe]);
 
   const start = useCallback(async () => {
-    if (connecting || connected) return;
+    if (connected) return true;
+    if (connecting) return false;
+
     setError("");
     setConnecting(true);
     setPhaseSafe("connecting");
@@ -184,10 +186,19 @@ export default function useOpenAIRealtimeVoice(variant = "female") {
       const dc = pc.createDataChannel("oai-events");
       dcRef.current = dc;
 
-      dc.addEventListener("open", () => {
-        setConnected(true);
-        setConnecting(false);
-        setPhaseSafe("listening");
+      const channelReady = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("OpenAI Realtime data channel timeout.")), 12000);
+        dc.addEventListener("open", () => {
+          clearTimeout(timeout);
+          setConnected(true);
+          setConnecting(false);
+          setPhaseSafe("listening");
+          resolve(true);
+        }, { once: true });
+        dc.addEventListener("error", () => {
+          clearTimeout(timeout);
+          reject(new Error("OpenAI Realtime data channel error."));
+        }, { once: true });
       });
 
       dc.addEventListener("message", (event) => {
@@ -239,11 +250,13 @@ export default function useOpenAIRealtimeVoice(variant = "female") {
       const answerSdp = await response.text();
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
       startMeters();
+      await channelReady;
+      return true;
     } catch (err) {
       const message = err?.message || "Nie udało się uruchomić OpenAI Realtime.";
-      setError(message);
       stop();
       setError(message);
+      return false;
     }
   }, [connected, connecting, setPhaseSafe, startMeters, stop, variant]);
 
@@ -264,6 +277,12 @@ export default function useOpenAIRealtimeVoice(variant = "female") {
     return true;
   }, [setPhaseSafe]);
 
+  const startAndSend = useCallback(async (text) => {
+    const ready = connected ? true : await start();
+    if (!ready) return false;
+    return sendText(text);
+  }, [connected, sendText, start]);
+
   useEffect(() => () => stop(), [stop]);
 
   useEffect(() => {
@@ -280,6 +299,7 @@ export default function useOpenAIRealtimeVoice(variant = "female") {
     start,
     stop,
     sendText,
+    startAndSend,
     voice: variant === "male" ? "cedar" : "marin",
   };
 }
