@@ -6,6 +6,16 @@ const VOICE_BY_VARIANT = {
   male: "cedar",
 };
 
+export async function GET() {
+  return Response.json({
+    configured: Boolean(process.env.OPENAI_API_KEY),
+    model: "gpt-realtime-2.1",
+    voices: VOICE_BY_VARIANT,
+  }, {
+    headers: { "Cache-Control": "no-store" },
+  });
+}
+
 export async function POST(request) {
   const apiKey = process.env.OPENAI_API_KEY;
 
