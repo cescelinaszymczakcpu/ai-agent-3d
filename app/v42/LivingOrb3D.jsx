@@ -13,6 +13,14 @@ export const presets={
   femaleAurora:{name:'Living Glass Orb v1',gender:'female',primary:'#f8fdff',secondary:'#785cff',accent:'#ff6fcf',opacity:1,glow:.8,glass:1,eyes:false,hair:false,mustache:false,mouth:false}
 };
 
+function smooth01(x){ return x*x*(3-2*x); }
+function lumeniaBreath(t){
+  const c=((t%5)+5)%5;
+  if(c<1.8) return smooth01(c/1.8);
+  if(c<2.5) return 1;
+  return 1-smooth01((c-2.5)/2.5);
+}
+
 const auroraVertex=`
 varying vec3 vLocal;
 varying vec3 vWorld;
@@ -41,9 +49,10 @@ void main(){
   float t=uTime*.03;
   float n=noise3(p*2.7+vec3(t,-t*.55,t*.35));
   float n2=noise3(p*5.1+vec3(-t*.4,t*.28,-t*.2));
-  float deform=(n*.65+n2*.35-.5)*0.022;
-  deform*=0.72+uBreath*.28;
+  float organic=(n*.65+n2*.35-.5);
+  float deform=organic*(0.020 + uBreath*0.022);
   p += normal*deform;
+  p *= 1.0 + uBreath*0.012;
   vec4 world=modelMatrix*vec4(p,1.0);
   vWorld=world.xyz;
   vNormalW=normalize(mat3(modelMatrix)*normal);
@@ -85,6 +94,8 @@ float fbm(vec3 p){
 void main(){
   float t=uTime*.03;
   vec3 p=vLocal;
+  float radialPush=mix(1.0,0.90,uBreath);
+  p*=radialPush;
   float n1=fbm(p*2.0+vec3(t,-t*.6,t*.3));
   float n2=fbm((p.yzx+vec3(.4,-.1,.2))*2.6+vec3(-t*.45,t*.25,-t*.15));
   float ribbons=smoothstep(.33,.78,n1*.68+n2*.48);
@@ -111,29 +122,33 @@ void main(){
   vec3 V=normalize(cameraPosition-vWorld);
   float fres=pow(1.0-clamp(dot(normalize(vNormalW),V),0.0,1.0),2.15);
   float center=1.0-smoothstep(.30,1.05,length(p.xy));
-  float breathe=.92+uBreath*.10;
-  float alpha=(.19+ribbons*.22+wisps*.10+fres*.055)*breathe;
-  float lum=(1.06+center*.28+uBreath*.09);
+  float alpha=(.20+ribbons*.24+wisps*.11+fres*.065)*(1.0+uBreath*.12);
+  float lum=(1.10+center*.30+uBreath*.14);
   gl_FragColor=vec4(col*lum,alpha);
 }`;
 
 function InternalAurora(){
   const mat=useRef();
   const group=useRef();
+  const core=useRef();
   const uniforms=useMemo(()=>({uTime:{value:0},uBreath:{value:0}}),[]);
   useFrame(({clock})=>{
     const t=clock.elapsedTime;
-    const wave=(Math.sin((t/5.0)*Math.PI*2-Math.PI/2)+1)/2;
-    const breath=wave*wave*(3-2*wave);
+    const breath=lumeniaBreath(t);
     if(mat.current){
       mat.current.uniforms.uTime.value=t;
       mat.current.uniforms.uBreath.value=breath;
     }
     if(group.current){
-      const e=1+breath*.009;
-      group.current.scale.set(e,e*(1+breath*.002),e);
+      const e=1+breath*.025;
+      group.current.scale.set(e,e*(1+breath*.004),e);
       group.current.rotation.y=t*.012;
       group.current.rotation.z=.018*Math.sin(t*.09);
+    }
+    if(core.current){
+      core.current.scale.setScalar(.69+breath*.024);
+      core.current.material.emissiveIntensity=.72+breath*.18;
+      core.current.material.opacity=.10+breath*.018;
     }
   });
   return <group ref={group}>
@@ -141,7 +156,7 @@ function InternalAurora(){
       <sphereGeometry args={[1,128,128]}/>
       <shaderMaterial ref={mat} uniforms={uniforms} vertexShader={auroraVertex} fragmentShader={auroraFragment} transparent depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide}/>
     </mesh>
-    <mesh scale={.69} rotation={[.22,-.28,.12]}>
+    <mesh ref={core} scale={.69} rotation={[.22,-.28,.12]}>
       <sphereGeometry args={[1,96,96]}/>
       <meshPhysicalMaterial color="#8cecff" transparent opacity={.10} roughness={.24} transmission={.30} emissive="#67eaff" emissiveIntensity={.72}/>
     </mesh>
@@ -157,20 +172,21 @@ function LivingGlassOrb(){
 
   useFrame(({clock})=>{
     const t=clock.elapsedTime;
-    const wave=(Math.sin((t/5.0)*Math.PI*2-Math.PI/2)+1)/2;
-    const breath=wave*wave*(3-2*wave);
-    const micro=.0018*Math.sin(t*.41)+.0012*Math.sin(t*.73+1.1);
+    const breath=lumeniaBreath(t);
+    const micro=.0012*Math.sin(t*.41)+.0008*Math.sin(t*.73+1.1);
     if(root.current){
-      const s=1+breath*.012+micro;
-      root.current.scale.set(s*(1+breath*.0015),s*(1-breath*.0007),s);
+      const sx=1+breath*.015+micro;
+      const sy=1+breath*.011+micro*.55;
+      const sz=1+breath*.015-micro*.35;
+      root.current.scale.set(sx,sy,sz);
     }
     if(shell.current){
       shell.current.rotation.y=t*.006;
       shell.current.rotation.x=.004*Math.sin(t*.11);
     }
-    if(cyan.current) cyan.current.intensity=7.4+breath*.75;
-    if(magenta.current) magenta.current.intensity=5.4+breath*.55;
-    if(violet.current) violet.current.intensity=4.6+breath*.45;
+    if(cyan.current) cyan.current.intensity=7.4*(1+breath*.12);
+    if(magenta.current) magenta.current.intensity=5.4*(1+breath*.10);
+    if(violet.current) violet.current.intensity=4.6*(1+breath*.12);
   });
 
   return <group ref={root}>
@@ -188,9 +204,9 @@ function LivingGlassOrb(){
         ior={1.47}
         chromaticAberration={.10}
         anisotropy={.08}
-        distortion={.025}
-        distortionScale={.035}
-        temporalDistortion={.006}
+        distortion={.032}
+        distortionScale={.045}
+        temporalDistortion={.009}
         clearcoat={1}
         clearcoatRoughness={.022}
         attenuationColor="#f7fdff"
