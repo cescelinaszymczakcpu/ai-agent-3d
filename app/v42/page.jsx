@@ -1,6 +1,6 @@
 'use client';
 
-import { LivingOrbCharacter } from './LivingOrbStudio';
+import { LivingOrbCharacter } from './LivingOrbCharacterV2';
 
 export default function LivingOrbStage(){
   return (
