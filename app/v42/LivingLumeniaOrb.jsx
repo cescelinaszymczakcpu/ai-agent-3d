@@ -7,6 +7,7 @@ import {OrbitControls} from "@react-three/drei";
 import SafeConversationalBody from "./SafeConversationalBody";
 import SafeBowAccessories from "./SafeBowAccessories";
 import SafeHatAccessories from "./SafeHatAccessories";
+import SafeAudioAccessories from "./SafeAudioAccessories";
 
 const EMOTIONS={
  neutral:{colors:["#24E7FF","#2867FF","#A347FF","#FF43C4"],speed:1,glow:1},
@@ -79,7 +80,7 @@ function LivingOrb({emotion="neutral",orbColors=null,colorFlowSpeed=.06}){
  </group>;
 }
 
-function Character({emotion,orbColors,colorFlowSpeed,state,audioLevel,audioBands,bow,hat}){
+function Character({emotion,orbColors,colorFlowSpeed,state,audioLevel,audioBands,bow,hat,audio}){
  const root=useRef();
  useFrame(frame=>{if(root.current){const t=frame.clock.elapsedTime;root.current.position.y=Math.sin(t*.54)*.010;root.current.rotation.y=Math.sin(t*.18)*.007;}});
  return <group ref={root}>
@@ -87,6 +88,7 @@ function Character({emotion,orbColors,colorFlowSpeed,state,audioLevel,audioBands
   <SafeConversationalBody state={state} audioLevel={audioLevel} audioBands={audioBands}/>
   <SafeBowAccessories bow={bow}/>
   <SafeHatAccessories hat={hat}/>
+  <SafeAudioAccessories audio={audio}/>
  </group>;
 }
 
@@ -109,10 +111,10 @@ function Scene(props){return <>
 
 export function RealisticAccessoryModel(){return null;}
 
-export default function LivingLumeniaOrb({emotion="neutral",view="front",colorFlowSpeed=.06,orbColors=null,state="idle",audioLevel=0,audioBands=null,bow=null,hat=null,style={}}){
+export default function LivingLumeniaOrb({emotion="neutral",view="front",colorFlowSpeed=.06,orbColors=null,state="idle",audioLevel=0,audioBands=null,bow=null,hat=null,audio=null,style={}}){
  return <div style={{width:"100%",height:"100%",minHeight:650,background:"#020611",overflow:"hidden",position:"relative",...style}}>
   <Canvas dpr={[1,1.5]} camera={{position:[0,-.10,8.8],fov:38,near:.1,far:40}} gl={{antialias:true,alpha:false,powerPreference:"high-performance"}} fallback={<div style={{width:"100%",height:"100%",minHeight:650,display:"grid",placeItems:"center",background:"#020611",color:"#DDF7FF",fontFamily:"system-ui"}}>3D renderer unavailable</div>} onCreated={({gl})=>{gl.setClearColor("#020611",1);gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.16;gl.outputColorSpace=THREE.SRGBColorSpace;gl.domElement.style.display="block";gl.domElement.style.background="#020611";}}>
-   <Scene emotion={emotion} view={view} colorFlowSpeed={THREE.MathUtils.clamp(colorFlowSpeed,.01,.15)} orbColors={orbColors} state={state} audioLevel={THREE.MathUtils.clamp(audioLevel||0,0,1)} audioBands={audioBands} bow={bow} hat={hat}/>
+   <Scene emotion={emotion} view={view} colorFlowSpeed={THREE.MathUtils.clamp(colorFlowSpeed,.01,.15)} orbColors={orbColors} state={state} audioLevel={THREE.MathUtils.clamp(audioLevel||0,0,1)} audioBands={audioBands} bow={bow} hat={hat} audio={audio}/>
   </Canvas>
  </div>;
 }
