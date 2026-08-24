@@ -15,10 +15,10 @@ export const presets={
 
 function smooth01(x){ return x*x*(3-2*x); }
 function lumeniaBreath(t){
-  const c=((t%5)+5)%5;
-  if(c<1.8) return smooth01(c/1.8);
+  const c=((t%5.2)+5.2)%5.2;
+  if(c<1.9) return smooth01(c/1.9);
   if(c<2.5) return 1;
-  return 1-smooth01((c-2.5)/2.5);
+  return 1-smooth01((c-2.5)/2.7);
 }
 
 const auroraVertex=`
@@ -50,9 +50,9 @@ void main(){
   float n=noise3(p*2.7+vec3(t,-t*.55,t*.35));
   float n2=noise3(p*5.1+vec3(-t*.4,t*.28,-t*.2));
   float organic=(n*.65+n2*.35-.5);
-  float deform=organic*(0.020 + uBreath*0.022);
+  float deform=organic*(0.018 + uBreath*0.032);
   p += normal*deform;
-  p *= 1.0 + uBreath*0.012;
+  p *= 1.0 + uBreath*0.030;
   vec4 world=modelMatrix*vec4(p,1.0);
   vWorld=world.xyz;
   vNormalW=normalize(mat3(modelMatrix)*normal);
@@ -94,8 +94,7 @@ float fbm(vec3 p){
 void main(){
   float t=uTime*.03;
   vec3 p=vLocal;
-  float radialPush=mix(1.0,0.90,uBreath);
-  p*=radialPush;
+  p*=mix(1.0,.86,uBreath);
   float n1=fbm(p*2.0+vec3(t,-t*.6,t*.3));
   float n2=fbm((p.yzx+vec3(.4,-.1,.2))*2.6+vec3(-t*.45,t*.25,-t*.15));
   float ribbons=smoothstep(.33,.78,n1*.68+n2*.48);
@@ -122,8 +121,8 @@ void main(){
   vec3 V=normalize(cameraPosition-vWorld);
   float fres=pow(1.0-clamp(dot(normalize(vNormalW),V),0.0,1.0),2.15);
   float center=1.0-smoothstep(.30,1.05,length(p.xy));
-  float alpha=(.20+ribbons*.24+wisps*.11+fres*.065)*(1.0+uBreath*.12);
-  float lum=(1.10+center*.30+uBreath*.14);
+  float alpha=(.20+ribbons*.24+wisps*.11+fres*.065)*(1.0+uBreath*.18);
+  float lum=(1.10+center*.30+uBreath*.18);
   gl_FragColor=vec4(col*lum,alpha);
 }`;
 
@@ -140,15 +139,15 @@ function InternalAurora(){
       mat.current.uniforms.uBreath.value=breath;
     }
     if(group.current){
-      const e=1+breath*.025;
-      group.current.scale.set(e,e*(1+breath*.004),e);
+      const e=1+breath*.050;
+      group.current.scale.set(e,e*(1+breath*.006),e);
       group.current.rotation.y=t*.012;
       group.current.rotation.z=.018*Math.sin(t*.09);
     }
     if(core.current){
-      core.current.scale.setScalar(.69+breath*.024);
-      core.current.material.emissiveIntensity=.72+breath*.18;
-      core.current.material.opacity=.10+breath*.018;
+      core.current.scale.setScalar(.69+breath*.055);
+      core.current.material.emissiveIntensity=.72+breath*.28;
+      core.current.material.opacity=.10+breath*.025;
     }
   });
   return <group ref={group}>
@@ -165,7 +164,6 @@ function InternalAurora(){
 
 function LivingGlassOrb(){
   const shell=useRef();
-  const root=useRef();
   const cyan=useRef();
   const magenta=useRef();
   const violet=useRef();
@@ -174,22 +172,20 @@ function LivingGlassOrb(){
     const t=clock.elapsedTime;
     const breath=lumeniaBreath(t);
     const micro=.0012*Math.sin(t*.41)+.0008*Math.sin(t*.73+1.1);
-    if(root.current){
-      const sx=1+breath*.015+micro;
-      const sy=1+breath*.011+micro*.55;
-      const sz=1+breath*.015-micro*.35;
-      root.current.scale.set(sx,sy,sz);
-    }
     if(shell.current){
+      const sx=1+breath*.035+micro;
+      const sy=1+breath*.022+micro*.45;
+      const sz=1+breath*.035-micro*.30;
+      shell.current.scale.set(sx,sy,sz);
       shell.current.rotation.y=t*.006;
       shell.current.rotation.x=.004*Math.sin(t*.11);
     }
-    if(cyan.current) cyan.current.intensity=7.4*(1+breath*.12);
-    if(magenta.current) magenta.current.intensity=5.4*(1+breath*.10);
-    if(violet.current) violet.current.intensity=4.6*(1+breath*.12);
+    if(cyan.current) cyan.current.intensity=7.4*(1+breath*.18);
+    if(magenta.current) magenta.current.intensity=5.4*(1+breath*.16);
+    if(violet.current) violet.current.intensity=4.6*(1+breath*.18);
   });
 
-  return <group ref={root}>
+  return <group>
     <InternalAurora/>
 
     <mesh ref={shell}>
@@ -238,7 +234,7 @@ function Scene(){
 export function LivingOrb(){
   return <div className="livingOrbCanvas" aria-label="Living Glass Orb v1">
     <Canvas
-      camera={{position:[0,0,5.15],fov:34}}
+      camera={{position:[0,0,5.3],fov:34}}
       dpr={[1,2]}
       gl={{antialias:true,alpha:false,powerPreference:'high-performance',toneMapping:THREE.ACESFilmicToneMapping}}
       onCreated={({gl})=>{gl.toneMappingExposure=1.55; gl.outputColorSpace=THREE.SRGBColorSpace;}}
