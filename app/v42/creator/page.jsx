@@ -1,94 +1,64 @@
 "use client";
 
-import React,{useEffect,useMemo,useRef,useState} from "react";
-import LivingLumeniaOrb from "../LivingLumeniaOrb";
+import React,{useEffect,useRef,useState} from "react";
+import {Canvas} from "@react-three/fiber";
+import LivingLumeniaOrb,{RealisticAccessoryModel} from "../LivingLumeniaOrb";
 import "./creator.css";
 
-const PRESETS={Aurora:["#22E8FF","#3568FF","#A245FF","#FF42C2"],Ocean:["#24EAD8","#20DFFF","#285DFF","#7955FF"],Sunset:["#FFB38E","#FF7DAF","#E84ACB","#8C55FF"],Forest:["#48E39F","#29D9C1","#34E8FF","#B5F25C"],Fire:["#FFC34D","#FF843F","#FF6C72","#D94BFF"]};
+const PRESETS={Aurora:["#22E8FF","#3568FF","#A245FF","#FF42C2"],Ocean:["#24EAD8","#20DFFF","#285DFF","#7955FF"],Sunset:["#FFB38E","#FF7DAF","#E84ACB","#8C55FF"]};
 const EMOTIONS=["neutral","happy","caring","calm","curious","excited","sad","surprised","warning","error"];
-const HATS=["none","fedora","bowler","top-hat","beret","soft-cap","wide-brim","futuristic-halo-hat"];
-const GLASSES=["none","round","oval","cat-eye","rectangular","futuristic","monocle"];
-const FLY=["none","one-strand","two-strands","three-strands","soft-curls","messy","side-flyaways","antenna-curl"];
-const MUSTACHES=["none","reference-curled","classic","slim","handlebar","big-curl","short","futuristic"];
-const BEARDS=["none","short","goatee","chin-glow","full-light-beard"];
-const HEAD=["none","crown","halo","headband","bow","star","light-flower","headphones","headset"];
+const HATS=["none","fedora","top-hat","beret"];
+const EYEWEAR=["none","round","cat-eye"];
+const AUDIO=["none","earmuffs","headphones","headset"];
+const MATERIALS=["glass","frosted-glass","iridescent","holographic","chrome-glass","pearlescent"];
+const MUSTACHES=["none","reference-curled","short","handlebar","big-curl"];
+const BEARDS=["none","short","goatee","full-light-beard"];
 
 function Chips({items,value,onChange}){return <div className="chipRow">{items.map(name=><button key={name} className={value===name?"chip active":"chip"} onClick={()=>onChange(name)}>{name.replaceAll("-"," ").toUpperCase()}</button>)}</div>;}
-function Range({label,value,min,max,step,onChange,unit=""}){return <label className="rangeControl"><span><b>{label}</b><em>{Number(value).toFixed(step<.01?3:2)}{unit}</em></span><input type="range" min={min} max={max} step={step} value={value} onChange={e=>onChange(Number(e.target.value))}/></label>;}
+function Range({label,value,min,max,step,onChange}){return <label className="rangeControl"><span><b>{label}</b><em>{Number(value).toFixed(step<.01?3:2)}</em></span><input type="range" min={min} max={max} step={step} value={value} onChange={e=>onChange(Number(e.target.value))}/></label>;}
 function ColorControl({label,value,onChange}){return <label className="smallColor"><span>{label}</span><input type="color" value={value} onChange={e=>onChange(e.target.value)}/><code>{value.toUpperCase()}</code></label>;}
 function cueFromText(text=""){const s=text.toLowerCase();if(/[mbp]/.test(s))return"mbp";if(/[fv]/.test(s))return"fv";if(/[ouó]/.test(s))return"oh";if(/[eiiy]/.test(s))return"ee";if(/[wqł]/.test(s))return"wq";if(/[lndtr]/.test(s))return"ln";if(/[aą]/.test(s))return"aa";return"aa";}
 
+function AccessoryThumb({type,selected,onClick,color="#8E6CFF",mode="iridescent"}){
+ const world=["earmuffs","headphones","headset"].includes(type);const sc=world?.58:type==="top-hat"?.82:.92;const y=world?-2.15:type==="top-hat"?-.35:-.10;
+ return <button onClick={onClick} style={{padding:0,border:selected?"1px solid rgba(85,225,255,.95)":"1px solid rgba(255,255,255,.10)",background:selected?"rgba(40,205,255,.10)":"rgba(255,255,255,.035)",borderRadius:14,overflow:"hidden",color:"white",cursor:"pointer"}}>
+  <div style={{height:92,width:"100%",background:"radial-gradient(circle at 50% 40%,rgba(74,94,170,.22),rgba(2,6,17,.86))"}}><Canvas orthographic camera={{position:[0,.2,6],zoom:72}} dpr={[1,1.2]} gl={{antialias:true,alpha:true}}><ambientLight intensity={.65}/><directionalLight position={[-3,4,5]} intensity={2.6} color="#D8F9FF"/><directionalLight position={[3,1,3]} intensity={1.8} color="#D86CFF"/><group position={[0,y,0]} scale={sc} rotation={[.08,-.28,0]}><RealisticAccessoryModel type={type} color={color} mode={mode}/></group></Canvas></div>
+  <div style={{fontSize:10,fontWeight:800,letterSpacing:.4,padding:"7px 5px"}}>{type.replaceAll("-"," ").toUpperCase()}</div>
+ </button>;
+}
+function AccessoryGrid({items,value,onChange,color,mode}){return <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8,marginTop:9}}>{items.filter(x=>x!=="none").map(type=><AccessoryThumb key={type} type={type} selected={value===type} onClick={()=>onChange(value===type?"none":type)} color={color} mode={mode}/>)}</div>;}
+
 export default function LivingOrbCreatorPage(){
- const [colors,setColors]=useState(PRESETS.Aurora);
- const [flow,setFlow]=useState(.06);
- const [variant,setVariant]=useState("female");
- const [emotion,setEmotion]=useState("neutral");
- const [state,setState]=useState("idle");
- const [audioLevel,setAudioLevel]=useState(0);
- const [voiceTest,setVoiceTest]=useState(false);
- const [visemeCue,setVisemeCue]=useState(null);
- const [eyesEnabled,setEyesEnabled]=useState(true);
- const [eyeStyle,setEyeStyle]=useState("reference");
- const [hairStyle,setHairStyle]=useState("elegant");
- const [mustacheStyle,setMustacheStyle]=useState("reference-curled");
- const [beardStyle,setBeardStyle]=useState("none");
- const [view,setView]=useState("front");
- const [testMode,setTestMode]=useState("");
+ const [colors,setColors]=useState(PRESETS.Aurora),[flow,setFlow]=useState(.06),[variant,setVariant]=useState("female"),[emotion,setEmotion]=useState("neutral"),[state,setState]=useState("idle"),[audioLevel,setAudioLevel]=useState(0),[voiceTest,setVoiceTest]=useState(false),[visemeCue,setVisemeCue]=useState(null),[view,setView]=useState("front"),[hairStyle,setHairStyle]=useState("elegant"),[mustacheStyle,setMustacheStyle]=useState("reference-curled"),[beardStyle,setBeardStyle]=useState("none");
  const [hat,setHat]=useState({type:"none",material:"iridescent",color:"#8E6CFF",scale:1,rotation:0,height:0,offsetX:0,offsetY:0,offsetZ:0});
- const [glasses,setGlasses]=useState({type:"none",frameColor:"#A682FF",frameThickness:.028,lensColor:"#70E8FF",lensTransparency:.70,scale:1,positionY:0,positionZ:0});
- const [flyaways,setFlyaways]=useState({type:"none",length:1,curve:1,thickness:.045,glow:.08,color:"#9C72FF",physics:true});
- const [headAccessory,setHeadAccessory]=useState({type:"none",color:"#A874FF"});
- const testTimer=useRef(null),visemeTimer=useRef(null),speechPulse=useRef(0),speechStarted=useRef(0);
-
- useEffect(()=>()=>{if(testTimer.current)clearTimeout(testTimer.current);if(visemeTimer.current)clearTimeout(visemeTimer.current);if(typeof window!=="undefined"&&window.speechSynthesis)window.speechSynthesis.cancel();},[]);
- useEffect(()=>{if(!voiceTest){setAudioLevel(0);return;}let frame=0;const loop=now=>{const t=(now-(speechStarted.current||now))/1000;speechPulse.current*=.91;const syllable=Math.max(0,Math.sin(t*11.2))*.14;const phrase=.55+.35*Math.sin(t*1.55);const value=Math.max(.025,Math.min(1,speechPulse.current*.72+syllable*Math.max(.25,phrase)+.06));setAudioLevel(value);frame=requestAnimationFrame(loop);};frame=requestAnimationFrame(loop);return()=>cancelAnimationFrame(frame);},[voiceTest]);
-
- const labels=["COLOR 1","COLOR 2","COLOR 3","COLOR 4"];
- const updateColor=(i,value)=>setColors(prev=>prev.map((c,index)=>index===i?value:c));
- const flowLabel=useMemo(()=>flow<.03?"VERY SLOW":flow<.05?"SLOW":flow<.075?"NORMAL":flow<.11?"ACTIVE":"DYNAMIC",[flow]);
- const patchHat=p=>setHat(v=>({...v,...p}));
- const patchGlasses=p=>setGlasses(v=>({...v,...p}));
- const patchFly=p=>setFlyaways(v=>({...v,...p}));
- const stopSpeaking=()=>{if(typeof window!=="undefined"&&window.speechSynthesis)window.speechSynthesis.cancel();if(visemeTimer.current)clearTimeout(visemeTimer.current);setVoiceTest(false);setVisemeCue("rest");setAudioLevel(0);setState("idle");setTestMode("");};
- const runBreathTest=()=>{if(testTimer.current)clearTimeout(testTimer.current);stopSpeaking();setState("idle");setEmotion("neutral");setTestMode("breath");testTimer.current=setTimeout(()=>setTestMode(""),10000);};
- const runColorTest=()=>{if(testTimer.current)clearTimeout(testTimer.current);stopSpeaking();setState("idle");setEmotion("neutral");setFlow(.10);setTestMode("color");testTimer.current=setTimeout(()=>{setFlow(.06);setTestMode("");},10000);};
- const runSpeakingTest=()=>{if(voiceTest){stopSpeaking();return;}if(testTimer.current)clearTimeout(testTimer.current);const text="Dzień dobry. Już teraz potrafię mówić, oddychać i gestykulować jednocześnie. Zwróć uwagę na dłonie, ruch głowy i różne kształty ust podczas tej wypowiedzi.";setTestMode("speaking");setState("speaking");setVoiceTest(true);setVisemeCue("rest");speechPulse.current=.35;speechStarted.current=performance.now();if(typeof window==="undefined"||!("speechSynthesis" in window)){testTimer.current=setTimeout(stopSpeaking,9000);return;}window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang="pl-PL";utterance.rate=.94;utterance.pitch=1.02;const voices=window.speechSynthesis.getVoices();const polish=voices.find(v=>String(v.lang).toLowerCase().startsWith("pl"));if(polish)utterance.voice=polish;utterance.onstart=()=>{speechStarted.current=performance.now();speechPulse.current=.55;};utterance.onboundary=e=>{const idx=e.charIndex||0;const chunk=text.slice(idx,idx+(e.charLength||10));setVisemeCue(cueFromText(chunk));speechPulse.current=Math.min(1,.52+Math.min(1,chunk.length/10)*.34);if(visemeTimer.current)clearTimeout(visemeTimer.current);visemeTimer.current=setTimeout(()=>setVisemeCue(null),240);};utterance.onend=()=>setTimeout(stopSpeaking,180);utterance.onerror=()=>stopSpeaking();window.speechSynthesis.speak(utterance);};
- const chooseVariant=v=>{setVariant(v);if(v==="female"){setHairStyle(hairStyle==="swept"?"elegant":hairStyle);}else{setHairStyle(hairStyle==="elegant"||hairStyle==="long-wave"||hairStyle==="short"?"swept":hairStyle);}};
-
+ const [glasses,setGlasses]=useState({type:"none",frameColor:"#A682FF",lensColor:"#70E8FF",frameThickness:.026,scale:1,positionY:0,positionZ:0});
+ const [headAccessory,setHeadAccessory]=useState({type:"none",color:"#A874FF",material:"iridescent"});
+ const timer=useRef(null),visemeTimer=useRef(null),speechPulse=useRef(0),speechStarted=useRef(0);
+ useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);if(visemeTimer.current)clearTimeout(visemeTimer.current);if(typeof window!=="undefined"&&window.speechSynthesis)window.speechSynthesis.cancel();},[]);
+ useEffect(()=>{if(!voiceTest){setAudioLevel(0);return;}let frame=0;const loop=now=>{const t=(now-(speechStarted.current||now))/1000;speechPulse.current*=.91;const syllable=Math.max(0,Math.sin(t*11.2))*.14;const phrase=.55+.35*Math.sin(t*1.55);setAudioLevel(Math.max(.025,Math.min(1,speechPulse.current*.72+syllable*Math.max(.25,phrase)+.06)));frame=requestAnimationFrame(loop);};frame=requestAnimationFrame(loop);return()=>cancelAnimationFrame(frame);},[voiceTest]);
+ const patchHat=p=>setHat(v=>({...v,...p})),patchGlasses=p=>setGlasses(v=>({...v,...p}));
+ const stopSpeaking=()=>{if(typeof window!=="undefined"&&window.speechSynthesis)window.speechSynthesis.cancel();if(visemeTimer.current)clearTimeout(visemeTimer.current);setVoiceTest(false);setVisemeCue("rest");setAudioLevel(0);setState("idle");};
+ const runSpeaking=()=>{if(voiceTest){stopSpeaking();return;}const text="Dzień dobry. Sprawdź naturalne ruchy ust, dłoni i głowy. Living Orb cały czas oddycha, a kolory płyną podczas naszej rozmowy.";setState("speaking");setVoiceTest(true);speechPulse.current=.45;speechStarted.current=performance.now();if(typeof window==="undefined"||!("speechSynthesis" in window)){timer.current=setTimeout(stopSpeaking,9000);return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="pl-PL";u.rate=.94;const polish=window.speechSynthesis.getVoices().find(v=>String(v.lang).toLowerCase().startsWith("pl"));if(polish)u.voice=polish;u.onboundary=e=>{const chunk=text.slice(e.charIndex||0,(e.charIndex||0)+(e.charLength||10));setVisemeCue(cueFromText(chunk));speechPulse.current=.75;if(visemeTimer.current)clearTimeout(visemeTimer.current);visemeTimer.current=setTimeout(()=>setVisemeCue(null),230);};u.onend=()=>setTimeout(stopSpeaking,180);u.onerror=stopSpeaking;window.speechSynthesis.speak(u);};
+ const updateColor=(i,v)=>setColors(p=>p.map((c,j)=>j===i?v:c));
  return <main className="creatorRoot">
-  <section className="creatorPreview">
-   <LivingLumeniaOrb variant={variant} emotion={emotion} emotionIntensity={.86} state={state} audioLevel={audioLevel} visemeCue={visemeCue} gesturesEnabled lipSyncEnabled mustacheStyle={variant==="male"?mustacheStyle:"none"} beardStyle={variant==="male"?beardStyle:"none"} eyesEnabled={eyesEnabled} eyeStyle={eyeStyle} hairStyle={hairStyle} hat={hat} glasses={glasses} flyaways={flyaways} headAccessory={headAccessory} view={view} colorFlowSpeed={flow} orbColors={colors} style={{width:"100%",height:"100%",minHeight:"100%"}}/>
-   <div className="creatorBadge">LIVING 3D GLASS ORB CREATOR {testMode&&`· TEST ${testMode.toUpperCase()}`}</div>
-   <div className="viewDock"><button onClick={()=>setView("front")} className={view==="front"?"mini active":"mini"}>FRONT</button><button onClick={()=>setView("side")} className={view==="side"?"mini active":"mini"}>SIDE</button><button onClick={()=>setView("back")} className={view==="back"?"mini active":"mini"}>BACK</button><button onClick={()=>setView("front")} className="mini">RESET VIEW</button></div>
-  </section>
-
+  <section className="creatorPreview"><LivingLumeniaOrb variant={variant} emotion={emotion} emotionIntensity={.86} state={state} audioLevel={audioLevel} visemeCue={visemeCue} gesturesEnabled lipSyncEnabled hairStyle={hairStyle} mustacheStyle={variant==="male"?mustacheStyle:"none"} beardStyle={variant==="male"?beardStyle:"none"} hat={hat} glasses={glasses} headAccessory={headAccessory} view={view} colorFlowSpeed={flow} orbColors={colors} style={{width:"100%",height:"100%",minHeight:"100%"}}/><div className="creatorBadge">REALISTIC 3D ACCESSORY BUILD</div><div className="viewDock"><button onClick={()=>setView("front")} className={view==="front"?"mini active":"mini"}>FRONT</button><button onClick={()=>setView("side")} className={view==="side"?"mini active":"mini"}>SIDE</button><button onClick={()=>setView("back")} className={view==="back"?"mini active":"mini"}>BACK</button></div></section>
   <aside className="creatorPanel">
-   <div className="creatorHead"><div><span className="creatorEyebrow">REAL-TIME 3D EDITOR</span><h1>Create Your Orb</h1></div><a className="backLink" href="/v42">ORB</a></div>
-   <p className="creatorIntro">Każda aktywna kontrolka zmienia realny renderer Three.js natychmiast. W SPEAKING działają równolegle: lip sync, gesty rąk, subtelny ruch głowy, Living Breath, color flow, emocja i Voice Orb.</p>
-
-   <div className="controlBlock"><div className="controlTitle">ORB</div><Chips items={["female","male"]} value={variant} onChange={chooseVariant}/><div className="subTitle">STATE</div><Chips items={["idle","listening","thinking","speaking"]} value={state} onChange={v=>{if(voiceTest)stopSpeaking();setState(v);}}/></div>
-
-   <div className="controlBlock"><div className="controlTitle">COLORS</div><div className="colorGrid">{colors.map((color,i)=><label className="colorCard" key={i}><span>{labels[i]}</span><input type="color" value={color} onChange={e=>updateColor(i,e.target.value)}/><code>{color.toUpperCase()}</code></label>)}</div><div className="subTitle">PRESETS</div><div className="chipRow">{Object.entries(PRESETS).map(([name,palette])=><button key={name} className="chip" onClick={()=>setColors(palette)}>{name.toUpperCase()}</button>)}</div><Range label={`COLOR FLOW · ${flowLabel}`} value={flow} min={.01} max={.15} step={.005} onChange={setFlow}/></div>
-
-   <div className="controlBlock"><div className="controlTitle">EYES</div><div className="switchRow"><button className={eyesEnabled?"chip active":"chip"} onClick={()=>setEyesEnabled(v=>!v)}>EYES {eyesEnabled?"ON":"OFF"}</button></div>{eyesEnabled&&<Chips items={["reference","large","minimal"]} value={eyeStyle} onChange={setEyeStyle}/>}</div>
+   <div className="creatorHead"><div><span className="creatorEyebrow">PRODUCTION ACCESSORY PASS</span><h1>Create Your Orb</h1></div><a className="backLink" href="/v42">ORB</a></div>
+   <p className="creatorIntro">Pokazuję tylko dodatki z realną geometrią 3D. Surowe placeholdery primitive zostały usunięte z listy wyboru.</p>
+   <div className="controlBlock"><div className="controlTitle">CHARACTER</div><Chips items={["female","male"]} value={variant} onChange={v=>{setVariant(v);setHairStyle(v==="female"?"elegant":"swept");}}/><div className="subTitle">STATE</div><Chips items={["idle","listening","thinking","speaking"]} value={state} onChange={v=>{if(voiceTest)stopSpeaking();setState(v);}}/></div>
+   <div className="controlBlock"><div className="controlTitle">LIVING COLORS</div><div className="colorGrid">{colors.map((c,i)=><label className="colorCard" key={i}><span>COLOR {i+1}</span><input type="color" value={c} onChange={e=>updateColor(i,e.target.value)}/><code>{c.toUpperCase()}</code></label>)}</div><div className="chipRow">{Object.entries(PRESETS).map(([n,p])=><button className="chip" key={n} onClick={()=>setColors(p)}>{n.toUpperCase()}</button>)}</div><Range label="COLOR FLOW" value={flow} min={.02} max={.12} step={.005} onChange={setFlow}/></div>
+   <div className="controlBlock"><div className="controlTitle">EMOTION PREVIEW</div><Chips items={EMOTIONS} value={emotion} onChange={setEmotion}/></div>
    <div className="controlBlock"><div className="controlTitle">HAIR</div>{variant==="female"?<Chips items={["elegant","short","long-wave","none"]} value={hairStyle} onChange={setHairStyle}/>:<Chips items={["swept","none"]} value={hairStyle} onChange={setHairStyle}/>}</div>
-   <div className="controlBlock"><div className="controlTitle">FLYAWAY HAIR</div><Chips items={FLY} value={flyaways.type} onChange={v=>patchFly({type:v})}/>{flyaways.type!=="none"&&<><Range label="LENGTH" value={flyaways.length} min={.55} max={1.6} step={.05} onChange={v=>patchFly({length:v})}/><Range label="CURVE" value={flyaways.curve} min={.45} max={1.8} step={.05} onChange={v=>patchFly({curve:v})}/><Range label="THICKNESS" value={flyaways.thickness} min={.018} max={.08} step={.002} onChange={v=>patchFly({thickness:v})}/><Range label="GLOW" value={flyaways.glow} min={0} max={.35} step={.01} onChange={v=>patchFly({glow:v})}/><ColorControl label="COLOR" value={flyaways.color} onChange={v=>patchFly({color:v})}/><button className={flyaways.physics?"chip active":"chip"} onClick={()=>patchFly({physics:!flyaways.physics})}>PHYSICS {flyaways.physics?"ON":"OFF"}</button></>}</div>
+   {variant==="male"&&<div className="controlBlock"><div className="controlTitle">FACIAL HAIR</div><div className="subTitle">MUSTACHE</div><Chips items={MUSTACHES} value={mustacheStyle} onChange={setMustacheStyle}/><div className="subTitle">BEARD</div><Chips items={BEARDS} value={beardStyle} onChange={setBeardStyle}/></div>}
 
-   {variant==="male"&&<div className="controlBlock"><div className="controlTitle">MUSTACHE</div><Chips items={MUSTACHES} value={mustacheStyle} onChange={setMustacheStyle}/><div className="subTitle">BEARD</div><Chips items={BEARDS} value={beardStyle} onChange={setBeardStyle}/></div>}
+   <div className="controlBlock"><div className="controlTitle">REAL HATS · 3D THUMBNAILS</div><AccessoryGrid items={HATS} value={hat.type} onChange={v=>patchHat({type:v})} color={hat.color} mode={hat.material}/><div className="subTitle">MATERIAL</div><Chips items={MATERIALS} value={hat.material} onChange={v=>patchHat({material:v})}/><ColorControl label="COLOR" value={hat.color} onChange={v=>patchHat({color:v})}/><Range label="SCALE" value={hat.scale} min={.78} max={1.28} step={.02} onChange={v=>patchHat({scale:v})}/><Range label="HEIGHT" value={hat.height} min={-.20} max={.38} step={.02} onChange={v=>patchHat({height:v})}/></div>
 
-   <div className="controlBlock"><div className="controlTitle">HATS</div><Chips items={HATS} value={hat.type} onChange={v=>patchHat({type:v})}/>{hat.type!=="none"&&<><div className="subTitle">HAT MATERIAL</div><Chips items={["glass","frosted-glass","iridescent","holographic","chrome-glass"]} value={hat.material} onChange={v=>patchHat({material:v})}/><ColorControl label="HAT COLOR" value={hat.color} onChange={v=>patchHat({color:v})}/><Range label="HAT SCALE" value={hat.scale} min={.65} max={1.45} step={.02} onChange={v=>patchHat({scale:v})}/><Range label="HAT ROTATION" value={hat.rotation} min={-3.14} max={3.14} step={.05} onChange={v=>patchHat({rotation:v})}/><Range label="HAT HEIGHT" value={hat.height} min={-.35} max={.55} step={.02} onChange={v=>patchHat({height:v})}/><Range label="OFFSET X" value={hat.offsetX} min={-.6} max={.6} step={.02} onChange={v=>patchHat({offsetX:v})}/><Range label="OFFSET Y" value={hat.offsetY} min={-.4} max={.6} step={.02} onChange={v=>patchHat({offsetY:v})}/><Range label="OFFSET Z" value={hat.offsetZ} min={-.6} max={.6} step={.02} onChange={v=>patchHat({offsetZ:v})}/></>}</div>
+   <div className="controlBlock"><div className="controlTitle">REAL EYEWEAR · 3D THUMBNAILS</div><AccessoryGrid items={EYEWEAR} value={glasses.type} onChange={v=>patchGlasses({type:v})} color={glasses.frameColor}/><ColorControl label="FRAME" value={glasses.frameColor} onChange={v=>patchGlasses({frameColor:v})}/><ColorControl label="LENS" value={glasses.lensColor} onChange={v=>patchGlasses({lensColor:v})}/><Range label="FRAME THICKNESS" value={glasses.frameThickness} min={.016} max={.045} step={.001} onChange={v=>patchGlasses({frameThickness:v})}/><Range label="SCALE" value={glasses.scale} min={.85} max={1.18} step={.01} onChange={v=>patchGlasses({scale:v})}/></div>
 
-   <div className="controlBlock"><div className="controlTitle">GLASSES</div><Chips items={GLASSES} value={glasses.type} onChange={v=>patchGlasses({type:v})}/>{glasses.type!=="none"&&<><ColorControl label="FRAME COLOR" value={glasses.frameColor} onChange={v=>patchGlasses({frameColor:v})}/><Range label="FRAME THICKNESS" value={glasses.frameThickness} min={.012} max={.07} step={.002} onChange={v=>patchGlasses({frameThickness:v})}/><ColorControl label="LENS COLOR" value={glasses.lensColor} onChange={v=>patchGlasses({lensColor:v})}/><Range label="LENS TRANSPARENCY" value={glasses.lensTransparency} min={.1} max={.95} step={.01} onChange={v=>patchGlasses({lensTransparency:v})}/><Range label="SCALE" value={glasses.scale} min={.72} max={1.35} step={.02} onChange={v=>patchGlasses({scale:v})}/><Range label="POSITION Y" value={glasses.positionY} min={-.35} max={.35} step={.02} onChange={v=>patchGlasses({positionY:v})}/><Range label="POSITION Z" value={glasses.positionZ} min={-.25} max={.35} step={.02} onChange={v=>patchGlasses({positionZ:v})}/></>}</div>
+   <div className="controlBlock"><div className="controlTitle">REAL AUDIO ACCESSORIES · 3D THUMBNAILS</div><AccessoryGrid items={AUDIO} value={headAccessory.type} onChange={v=>setHeadAccessory(p=>({...p,type:v}))} color={headAccessory.color} mode={headAccessory.material}/><div className="subTitle">MATERIAL</div><Chips items={MATERIALS} value={headAccessory.material} onChange={v=>setHeadAccessory(p=>({...p,material:v}))}/><ColorControl label="COLOR" value={headAccessory.color} onChange={v=>setHeadAccessory(p=>({...p,color:v}))}/></div>
 
-   <div className="controlBlock"><div className="controlTitle">HEAD ACCESSORIES</div><Chips items={HEAD} value={headAccessory.type} onChange={v=>setHeadAccessory(p=>({...p,type:v}))}/>{headAccessory.type!=="none"&&<ColorControl label="ACCESSORY COLOR" value={headAccessory.color} onChange={v=>setHeadAccessory(p=>({...p,color:v}))}/>}</div>
-
-   <div className="controlBlock"><div className="controlTitle">ANIMATION</div><div className="testRow"><button className={testMode==="breath"?"testButton active":"testButton"} onClick={runBreathTest}>TEST BREATH · 10 s</button><button className={testMode==="color"?"testButton active":"testButton"} onClick={runColorTest}>TEST COLOR FLOW · 10 s</button></div></div>
-
-   <div className="controlBlock"><div className="controlTitle">EMOTION PREVIEW</div><Chips items={EMOTIONS} value={emotion} onChange={v=>{setEmotion(v);setTestMode("");}}/><p className="controlHelp">Zmiana emocji trafia do shadera i jednocześnie moduluje styl gestów oraz mimikę. Breathing i color flow nie są resetowane.</p></div>
-
-   <div className="controlBlock"><div className="controlTitle">VOICE + HUMAN TALKING PREVIEW</div><button className={voiceTest?"testButton active":"testButton"} onClick={runSpeakingTest}>{voiceTest?"STOP SPEAKING":"TEST SPEAKING"}</button><div className="audioMeter"><i style={{width:`${Math.round(audioLevel*100)}%`}}/></div><p className="controlHelp">TEST SPEAKING uruchamia TTS, wielokształtowy pseudo-viseme lip sync, naturalne asymetryczne gesty rąk i subtelny ruch głowy. W produkcji komponent może przyjąć realny audioLevel, audioBands i bezpośredni visemeCue z toru TTS.</p></div>
-
-   <div className="stageNote">SPEAKING = LIP SYNC + HUMAN ARM GESTURES + HEAD MICRO-MOTION + LIVING BREATH + COLOR FLOW + EMOTION + VOICE ENERGY.</div>
+   <div className="controlBlock"><div className="controlTitle">VOICE + HUMAN TALKING</div><button className={voiceTest?"testButton active":"testButton"} onClick={runSpeaking}>{voiceTest?"STOP SPEAKING":"TEST SPEAKING"}</button><div className="audioMeter"><i style={{width:`${Math.round(audioLevel*100)}%`}}/></div><p className="controlHelp">Gesty, visemy, ruch głowy, Living Breath, color flow i emocja działają równolegle.</p></div>
+   <div className="stageNote">PRIORITY 8: FEDORA · TOP HAT · BERET · EARMUFFS · HEADPHONES · ROUND GLASSES · CAT EYE GLASSES · HEADSET. FRONT / SIDE / BACK służą do kontroli realnej głębokości.</div>
   </aside>
  </main>;
 }
