@@ -7,6 +7,18 @@ import "./creator.css";
 
 const PRESETS={Aurora:["#22E8FF","#3568FF","#A245FF","#FF42C2"],Ocean:["#24EAD8","#20DFFF","#285DFF","#7955FF"],Sunset:["#FFB38E","#FF7DAF","#E84ACB","#8C55FF"]};
 const EMOTIONS=["neutral","happy","caring","calm","curious","excited","sad","surprised","warning","error"];
+const EMOTION_PREVIEW={
+ neutral:{colors:["#22E8FF","#3568FF","#A245FF","#FF42C2"],flow:.060},
+ happy:{colors:["#2CF4FF","#39DCC8","#FF57CC","#FFB47E"],flow:.072},
+ caring:{colors:["#54E8F4","#637CFF","#C477FF","#FF8EAE"],flow:.050},
+ calm:{colors:["#65EAD9","#63B8FF","#9C8FFF","#DDA4FF"],flow:.042},
+ curious:{colors:["#35F0FF","#406CFF","#A34DFF","#DC58FF"],flow:.070},
+ excited:{colors:["#00F6FF","#425DFF","#CD38FF","#FF35A9"],flow:.085},
+ sad:{colors:["#367AAE","#3859B8","#6550A8","#835B9D"],flow:.038},
+ surprised:{colors:["#A8FAFF","#46BDFF","#B855FF","#FF75DF"],flow:.088},
+ warning:{colors:["#FFBF44","#FF7A4A","#C454FF","#FF568D"],flow:.064},
+ error:{colors:["#FF419C","#9E3DFF","#FF486A","#694AFF"],flow:.076}
+};
 const HATS=["none","fedora","top-hat","beret"];
 const EYEWEAR=["none","round","cat-eye"];
 const AUDIO=["none","earmuffs","headphones","headset"];
@@ -33,21 +45,23 @@ export default function LivingOrbCreatorPage(){
  const [hat,setHat]=useState({type:"none",material:"iridescent",color:"#8E6CFF",scale:1,rotation:0,height:0,offsetX:0,offsetY:0,offsetZ:0});
  const [glasses,setGlasses]=useState({type:"none",frameColor:"#A682FF",lensColor:"#70E8FF",frameThickness:.026,scale:1,positionY:0,positionZ:0});
  const [headAccessory,setHeadAccessory]=useState({type:"none",color:"#A874FF",material:"iridescent"});
- const timer=useRef(null),visemeTimer=useRef(null),speechPulse=useRef(0),speechStarted=useRef(0);
+ const timer=useRef(null),visemeTimer=useRef(null),speechPulse=useRef(0),speechStarted=useRef(0),customPalette=useRef([...PRESETS.Aurora]);
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);if(visemeTimer.current)clearTimeout(visemeTimer.current);if(typeof window!=="undefined"&&window.speechSynthesis)window.speechSynthesis.cancel();},[]);
  useEffect(()=>{if(!voiceTest){setAudioLevel(0);return;}let frame=0;const loop=now=>{const t=(now-(speechStarted.current||now))/1000;speechPulse.current*=.91;const syllable=Math.max(0,Math.sin(t*11.2))*.14;const phrase=.55+.35*Math.sin(t*1.55);setAudioLevel(Math.max(.025,Math.min(1,speechPulse.current*.72+syllable*Math.max(.25,phrase)+.06)));frame=requestAnimationFrame(loop);};frame=requestAnimationFrame(loop);return()=>cancelAnimationFrame(frame);},[voiceTest]);
  const patchHat=p=>setHat(v=>({...v,...p})),patchGlasses=p=>setGlasses(v=>({...v,...p}));
  const stopSpeaking=()=>{if(typeof window!=="undefined"&&window.speechSynthesis)window.speechSynthesis.cancel();if(visemeTimer.current)clearTimeout(visemeTimer.current);setVoiceTest(false);setVisemeCue("rest");setAudioLevel(0);setState("idle");};
  const runSpeaking=()=>{if(voiceTest){stopSpeaking();return;}const text="Dzień dobry. Sprawdź naturalne ruchy ust, dłoni i głowy. Living Orb cały czas oddycha, a kolory płyną podczas naszej rozmowy.";setState("speaking");setVoiceTest(true);speechPulse.current=.45;speechStarted.current=performance.now();if(typeof window==="undefined"||!("speechSynthesis" in window)){timer.current=setTimeout(stopSpeaking,9000);return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="pl-PL";u.rate=.94;const polish=window.speechSynthesis.getVoices().find(v=>String(v.lang).toLowerCase().startsWith("pl"));if(polish)u.voice=polish;u.onboundary=e=>{const chunk=text.slice(e.charIndex||0,(e.charIndex||0)+(e.charLength||10));setVisemeCue(cueFromText(chunk));speechPulse.current=.75;if(visemeTimer.current)clearTimeout(visemeTimer.current);visemeTimer.current=setTimeout(()=>setVisemeCue(null),230);};u.onend=()=>setTimeout(stopSpeaking,180);u.onerror=stopSpeaking;window.speechSynthesis.speak(u);};
- const updateColor=(i,v)=>setColors(p=>p.map((c,j)=>j===i?v:c));
+ const updateColor=(i,v)=>{setColors(p=>{const next=p.map((c,j)=>j===i?v:c);customPalette.current=[...next];return next;});setEmotion("neutral");};
+ const applyEmotion=name=>{const cfg=EMOTION_PREVIEW[name]||EMOTION_PREVIEW.neutral;setEmotion(name);if(name==="neutral"){setColors([...customPalette.current]);setFlow(.060);}else{setColors([...cfg.colors]);setFlow(cfg.flow);}};
+ const applyPreset=palette=>{customPalette.current=[...palette];setColors([...palette]);setEmotion("neutral");setFlow(.060);};
  return <main className="creatorRoot">
-  <section className="creatorPreview"><LivingLumeniaOrb variant={variant} emotion={emotion} emotionIntensity={.86} state={state} audioLevel={audioLevel} visemeCue={visemeCue} gesturesEnabled lipSyncEnabled hairStyle={hairStyle} mustacheStyle={variant==="male"?mustacheStyle:"none"} beardStyle={variant==="male"?beardStyle:"none"} hat={hat} glasses={glasses} headAccessory={headAccessory} view={view} colorFlowSpeed={flow} orbColors={colors} style={{width:"100%",height:"100%",minHeight:"100%"}}/><div className="creatorBadge">REALISTIC 3D ACCESSORY BUILD</div><div className="viewDock"><button onClick={()=>setView("front")} className={view==="front"?"mini active":"mini"}>FRONT</button><button onClick={()=>setView("side")} className={view==="side"?"mini active":"mini"}>SIDE</button><button onClick={()=>setView("back")} className={view==="back"?"mini active":"mini"}>BACK</button></div></section>
+  <section className="creatorPreview"><LivingLumeniaOrb variant={variant} emotion={emotion} emotionIntensity={1} state={state} audioLevel={audioLevel} visemeCue={visemeCue} gesturesEnabled lipSyncEnabled hairStyle={hairStyle} mustacheStyle={variant==="male"?mustacheStyle:"none"} beardStyle={variant==="male"?beardStyle:"none"} hat={hat} glasses={glasses} headAccessory={headAccessory} view={view} colorFlowSpeed={flow} orbColors={colors} style={{width:"100%",height:"100%",minHeight:"100%"}}/><div className="creatorBadge">REALISTIC 3D ACCESSORY BUILD · {emotion.toUpperCase()}</div><div className="viewDock"><button onClick={()=>setView("front")} className={view==="front"?"mini active":"mini"}>FRONT</button><button onClick={()=>setView("side")} className={view==="side"?"mini active":"mini"}>SIDE</button><button onClick={()=>setView("back")} className={view==="back"?"mini active":"mini"}>BACK</button></div></section>
   <aside className="creatorPanel">
    <div className="creatorHead"><div><span className="creatorEyebrow">PRODUCTION ACCESSORY PASS</span><h1>Create Your Orb</h1></div><a className="backLink" href="/v42">ORB</a></div>
    <p className="creatorIntro">Pokazuję tylko dodatki z realną geometrią 3D. Surowe placeholdery primitive zostały usunięte z listy wyboru.</p>
    <div className="controlBlock"><div className="controlTitle">CHARACTER</div><Chips items={["female","male"]} value={variant} onChange={v=>{setVariant(v);setHairStyle(v==="female"?"elegant":"swept");}}/><div className="subTitle">STATE</div><Chips items={["idle","listening","thinking","speaking"]} value={state} onChange={v=>{if(voiceTest)stopSpeaking();setState(v);}}/></div>
-   <div className="controlBlock"><div className="controlTitle">LIVING COLORS</div><div className="colorGrid">{colors.map((c,i)=><label className="colorCard" key={i}><span>COLOR {i+1}</span><input type="color" value={c} onChange={e=>updateColor(i,e.target.value)}/><code>{c.toUpperCase()}</code></label>)}</div><div className="chipRow">{Object.entries(PRESETS).map(([n,p])=><button className="chip" key={n} onClick={()=>setColors(p)}>{n.toUpperCase()}</button>)}</div><Range label="COLOR FLOW" value={flow} min={.02} max={.12} step={.005} onChange={setFlow}/></div>
-   <div className="controlBlock"><div className="controlTitle">EMOTION PREVIEW</div><Chips items={EMOTIONS} value={emotion} onChange={setEmotion}/></div>
+   <div className="controlBlock"><div className="controlTitle">LIVING COLORS</div><div className="colorGrid">{colors.map((c,i)=><label className="colorCard" key={i}><span>COLOR {i+1}</span><input type="color" value={c} onChange={e=>updateColor(i,e.target.value)}/><code>{c.toUpperCase()}</code></label>)}</div><div className="chipRow">{Object.entries(PRESETS).map(([n,p])=><button className="chip" key={n} onClick={()=>applyPreset(p)}>{n.toUpperCase()}</button>)}</div><Range label="COLOR FLOW" value={flow} min={.02} max={.12} step={.005} onChange={setFlow}/></div>
+   <div className="controlBlock"><div className="controlTitle">EMOTION PREVIEW</div><Chips items={EMOTIONS} value={emotion} onChange={applyEmotion}/><p className="controlHelp">Kliknięcie emocji zmienia bezpośrednio cztery kolory Living Orb i tempo flow. Neutral przywraca Twoją własną paletę.</p></div>
    <div className="controlBlock"><div className="controlTitle">HAIR</div>{variant==="female"?<Chips items={["elegant","short","long-wave","none"]} value={hairStyle} onChange={setHairStyle}/>:<Chips items={["swept","none"]} value={hairStyle} onChange={setHairStyle}/>}</div>
    {variant==="male"&&<div className="controlBlock"><div className="controlTitle">FACIAL HAIR</div><div className="subTitle">MUSTACHE</div><Chips items={MUSTACHES} value={mustacheStyle} onChange={setMustacheStyle}/><div className="subTitle">BEARD</div><Chips items={BEARDS} value={beardStyle} onChange={setBeardStyle}/></div>}
 
