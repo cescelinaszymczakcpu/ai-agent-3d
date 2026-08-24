@@ -4,6 +4,7 @@ import React,{useMemo,useRef} from "react";
 import * as THREE from "three";
 import {Canvas,useFrame,useThree} from "@react-three/fiber";
 import {OrbitControls} from "@react-three/drei";
+import SafeConversationalBody from "./SafeConversationalBody";
 
 const EMOTIONS={
  neutral:{colors:["#24E7FF","#2867FF","#A347FF","#FF43C4"],speed:1,glow:1},
@@ -24,12 +25,12 @@ function livingBreath(time,period=5.2){const c=(time%period)/period;if(c<.34)ret
 function CameraView({view="front"}){
  const {camera}=useThree();
  useFrame(()=>{
-  const target=new THREE.Vector3(0,.35,0);
-  let dest=new THREE.Vector3(0,.35,7.6);
-  if(view==="left")dest.set(-7.6,.35,0);
-  else if(view==="right"||view==="side")dest.set(7.6,.35,0);
-  else if(view==="back")dest.set(0,.35,-7.6);
-  else if(view==="top")dest.set(0,7.8,.15);
+  const target=new THREE.Vector3(0,-.22,0);
+  let dest=new THREE.Vector3(0,-.10,8.8);
+  if(view==="left")dest.set(-8.8,-.10,0);
+  else if(view==="right"||view==="side")dest.set(8.8,-.10,0);
+  else if(view==="back")dest.set(0,-.10,-8.8);
+  else if(view==="top")dest.set(0,9.1,.20);
   camera.position.lerp(dest,.10);
   camera.lookAt(target);
  });
@@ -67,24 +68,21 @@ function LivingOrb({emotion="neutral",orbColors=null,colorFlowSpeed=.06}){
     <sphereGeometry args={[1.03,48,48]}/>
     <meshBasicMaterial color={color} transparent opacity={.22} depthWrite={false} blending={THREE.AdditiveBlending}/>
    </mesh>)}
-   <mesh scale={.72}>
-    <sphereGeometry args={[1.18,48,48]}/>
-    <meshBasicMaterial color="#F5FBFF" transparent opacity={.08} depthWrite={false} blending={THREE.AdditiveBlending}/>
-   </mesh>
+   <mesh scale={.72}><sphereGeometry args={[1.18,48,48]}/><meshBasicMaterial color="#F5FBFF" transparent opacity={.08} depthWrite={false} blending={THREE.AdditiveBlending}/></mesh>
   </group>
-
-  <mesh ref={shell}>
-   <sphereGeometry args={[1.68,72,72]}/>
-   <meshPhysicalMaterial color="#F5FBFF" transparent opacity={.34} transmission={.92} thickness={.62} roughness={.07} metalness={0} clearcoat={1} clearcoatRoughness={.025} ior={1.45} envMapIntensity={1.1} emissive={palette[0]} emissiveIntensity={.02*e.glow} depthWrite={false}/>
-  </mesh>
-
-  <mesh ref={halo} scale={1.01}>
-   <sphereGeometry args={[1.68,48,48]}/>
-   <meshBasicMaterial color={palette[2]} transparent opacity={.018} side={THREE.BackSide} depthWrite={false} blending={THREE.AdditiveBlending}/>
-  </mesh>
-
+  <mesh ref={shell}><sphereGeometry args={[1.68,72,72]}/><meshPhysicalMaterial color="#F5FBFF" transparent opacity={.34} transmission={.92} thickness={.62} roughness={.07} metalness={0} clearcoat={1} clearcoatRoughness={.025} ior={1.45} envMapIntensity={1.1} emissive={palette[0]} emissiveIntensity={.02*e.glow} depthWrite={false}/></mesh>
+  <mesh ref={halo} scale={1.01}><sphereGeometry args={[1.68,48,48]}/><meshBasicMaterial color={palette[2]} transparent opacity={.018} side={THREE.BackSide} depthWrite={false} blending={THREE.AdditiveBlending}/></mesh>
   <pointLight position={[0,.15,1.3]} color={palette[0]} intensity={1.9*e.glow} distance={5}/>
   <pointLight position={[.8,-.3,-.8]} color={palette[3]} intensity={1.5*e.glow} distance={4}/>
+ </group>;
+}
+
+function Character({emotion,orbColors,colorFlowSpeed,state,audioLevel,audioBands}){
+ const root=useRef();
+ useFrame(frame=>{if(root.current){const t=frame.clock.elapsedTime;root.current.position.y=Math.sin(t*.54)*.010;root.current.rotation.y=Math.sin(t*.18)*.007;}});
+ return <group ref={root}>
+  <LivingOrb emotion={emotion} orbColors={orbColors} colorFlowSpeed={colorFlowSpeed}/>
+  <SafeConversationalBody state={state} audioLevel={audioLevel} audioBands={audioBands}/>
  </group>;
 }
 
@@ -101,22 +99,16 @@ function Scene(props){return <>
  <color attach="background" args={["#020611"]}/>
  <StudioLights/>
  <CameraView view={props.view}/>
- <LivingOrb emotion={props.emotion} orbColors={props.orbColors} colorFlowSpeed={props.colorFlowSpeed}/>
- <OrbitControls target={[0,.35,0]} enablePan={false} enableDamping dampingFactor={.08} minDistance={5.8} maxDistance={10}/>
+ <Character {...props}/>
+ <OrbitControls target={[0,-.22,0]} enablePan={false} enableDamping dampingFactor={.08} minDistance={6.4} maxDistance={11}/>
  </>}
 
 export function RealisticAccessoryModel(){return null;}
 
-export default function LivingLumeniaOrb({emotion="neutral",view="front",colorFlowSpeed=.06,orbColors=null,style={}}){
+export default function LivingLumeniaOrb({emotion="neutral",view="front",colorFlowSpeed=.06,orbColors=null,state="idle",audioLevel=0,audioBands=null,style={}}){
  return <div style={{width:"100%",height:"100%",minHeight:650,background:"#020611",overflow:"hidden",position:"relative",...style}}>
-  <Canvas
-   dpr={[1,1.5]}
-   camera={{position:[0,.35,7.6],fov:38,near:.1,far:40}}
-   gl={{antialias:true,alpha:false,powerPreference:"high-performance"}}
-   fallback={<div style={{width:"100%",height:"100%",minHeight:650,display:"grid",placeItems:"center",background:"#020611",color:"#DDF7FF",fontFamily:"system-ui"}}>3D renderer unavailable</div>}
-   onCreated={({gl})=>{gl.setClearColor("#020611",1);gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.16;gl.outputColorSpace=THREE.SRGBColorSpace;gl.domElement.style.display="block";gl.domElement.style.background="#020611";}}
-  >
-   <Scene emotion={emotion} view={view} colorFlowSpeed={THREE.MathUtils.clamp(colorFlowSpeed,.01,.15)} orbColors={orbColors}/>
+  <Canvas dpr={[1,1.5]} camera={{position:[0,-.10,8.8],fov:38,near:.1,far:40}} gl={{antialias:true,alpha:false,powerPreference:"high-performance"}} fallback={<div style={{width:"100%",height:"100%",minHeight:650,display:"grid",placeItems:"center",background:"#020611",color:"#DDF7FF",fontFamily:"system-ui"}}>3D renderer unavailable</div>} onCreated={({gl})=>{gl.setClearColor("#020611",1);gl.toneMapping=THREE.ACESFilmicToneMapping;gl.toneMappingExposure=1.16;gl.outputColorSpace=THREE.SRGBColorSpace;gl.domElement.style.display="block";gl.domElement.style.background="#020611";}}>
+   <Scene emotion={emotion} view={view} colorFlowSpeed={THREE.MathUtils.clamp(colorFlowSpeed,.01,.15)} orbColors={orbColors} state={state} audioLevel={THREE.MathUtils.clamp(audioLevel||0,0,1)} audioBands={audioBands}/>
   </Canvas>
  </div>;
 }
